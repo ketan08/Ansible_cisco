@@ -1,0 +1,4 @@
+show_commands:
+  - show ip interface brief
+  - show cdp neighbor
+  - show vlan brief

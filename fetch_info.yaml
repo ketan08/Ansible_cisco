@@ -1,0 +1,26 @@
+---
+- name: Collect information from Cisco switches
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+
+  vars_files:
+    - commands.yaml   # import commands from external file
+
+  tasks:
+    - name: Run multiple show commands
+      ios_command:
+        commands: "{{ show_commands }}"
+      register: command_outputs
+
+    - name: Save outputs into per-switch file
+      copy:
+        content: |
+          ===== Device: {{ inventory_hostname }} =====
+          {% for idx in range(show_commands | length) %}
+          ### {{ show_commands[idx] }} ###
+          {{ command_outputs.stdout[idx] }}
+
+          {% endfor %}
+        dest: "./{{ inventory_hostname }}_output.txt"
+        mode: '0644'
