@@ -57,7 +57,7 @@
 
     - name: Ensure output directory exists on control node
       file:
-        path: /desired/output/location
+        path: /ansible_ee_demo
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -77,5 +77,5 @@
           LACP Info: {{ lacp_info.stdout | to_nice_json }}
           MTU Info: {{ mtu_info.stdout | to_nice_json }}
           Switch IPs: {{ switch_ips.stdout | to_nice_json }}
-        dest: /desired/output/location/{{ inventory_hostname }}.txt
+        dest: /ansible_ee_demo/{{ inventory_hostname }}.txt
       delegate_to: localhost
