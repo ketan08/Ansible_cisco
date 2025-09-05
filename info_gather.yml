@@ -1,0 +1,81 @@
+---
+- name: Cisco Switch Configuration Validation and Reporting
+  hosts: cisco_switches
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Validate VTY configuration
+      ios_command:
+        commands: show running-config | section line vty
+      register: vty_config
+
+    - name: Validate SNMP configuration
+      ios_command:
+        commands: show running-config | include snmp
+      register: snmp_config
+
+    - name: Validate DHCP relay configuration
+      ios_command:
+        commands: show running-config | include ip helper-address
+      register: dhcp_config
+
+    - name: Check AAA configuration
+      ios_command:
+        commands: show running-config | section aaa
+      register: aaa_config
+
+    - name: Validate VLAN assignment
+      ios_command:
+        commands: show vlan brief
+      register: vlan_info
+
+    - name: Validate access ports
+      ios_command:
+        commands: show interface status
+      register: port_status
+
+    - name: Check port logging
+      ios_command:
+        commands: show logging
+      register: port_logging
+
+    - name: Confirm LACP configurations
+      ios_command:
+        commands: show etherchannel summary
+      register: lacp_info
+
+    - name: Verify MTU settings
+      ios_command:
+        commands: show interface | include MTU
+      register: mtu_info
+
+    - name: Get switch IP addresses
+      ios_command:
+        commands: show ip interface brief
+      register: switch_ips
+
+    - name: Ensure output directory exists on control node
+      file:
+        path: /desired/output/location
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Save host output to a file on control node
+      copy:
+        content: |
+          Host: {{ inventory_hostname }}
+          VTY Config: {{ vty_config.stdout | to_nice_json }}
+          SNMP Config: {{ snmp_config.stdout | to_nice_json }}
+          DHCP Config: {{ dhcp_config.stdout | to_nice_json }}
+          AAA Config: {{ aaa_config.stdout | to_nice_json }}
+          VLAN Info: {{ vlan_info.stdout | to_nice_json }}
+          Access Port Status: {{ port_status.stdout | to_nice_json }}
+          Port Logging: {{ port_logging.stdout | to_nice_json }}
+          LACP Info: {{ lacp_info.stdout | to_nice_json }}
+          MTU Info: {{ mtu_info.stdout | to_nice_json }}
+          Switch IPs: {{ switch_ips.stdout | to_nice_json }}
+        dest: /desired/output/location/{{ inventory_hostname }}.txt
+      delegate_to: localhost
